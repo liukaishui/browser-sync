@@ -1,21 +1,26 @@
 (function () {
     if ("WebSocket" in window) {
         var ws = new WebSocket("ws://127.0.0.1:2048/ws")
+        var close = 0
         ws.onopen = function () {
             ws.send("ping")
         }
         ws.onmessage = function (evt) {
             if (evt.data === "ok") {
+                close = 1
                 ws.close()
-                locatoin.reload()
+                location.reload()
             } else if (evt.data === "err") {
+                close = 1
                 ws.close()
                 alert("WebSocket 服务器出错了")
             }
         }
         ws.onclose = function () {
             ws = null
-            console.log("close")
+            if (close === 0) {
+                alert("WebSocket 已关闭")
+            }
         }
         ws.onerror = function () {
             ws = null

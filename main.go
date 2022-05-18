@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -28,7 +29,7 @@ func main() {
 				for _, client := range users {
 					_ = client.Conn.WriteMessage(websocket.TextMessage, []byte("err"))
 				}
-				return
+				os.Exit(1)
 			case notice := <-change:
 				fmt.Println("notice: ", notice)
 				for _, client := range users {
