@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"crypto/md5"
@@ -6,15 +6,6 @@ import (
 	"io"
 	"os"
 )
-
-func InSlice(value string, vSlice []string) bool {
-	for _, v := range vSlice {
-		if v == value {
-			return true
-		}
-	}
-	return false
-}
 
 func Md5(str string) (string, error) {
 	hash := md5.New()

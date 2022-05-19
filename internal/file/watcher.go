@@ -1,13 +1,10 @@
-package main
+package file
 
 import (
+	"browser-sync/internal/common"
+	"browser-sync/pkg/utils"
 	"io/ioutil"
 	"time"
-)
-
-var (
-	errors = make(chan interface{})
-	change = make(chan bool)
 )
 
 type Tree struct {
@@ -29,7 +26,7 @@ func DirTree(tree *Tree, ignore []string) (*Tree, error) {
 			Tree: make(map[string]*Tree),
 		}
 
-		if InSlice(vTree.Path, ignore) {
+		if utils.InSlice(vTree.Path, ignore) {
 			continue
 		}
 
@@ -39,9 +36,9 @@ func DirTree(tree *Tree, ignore []string) (*Tree, error) {
 				return tree, err
 			}
 		} else {
-			vHash, err := Md5File(vTree.Path)
+			vHash, err := utils.Md5File(vTree.Path)
 			if err != nil {
-				continue
+				return tree, err
 			}
 			vTree.Hash = vHash
 		}
@@ -54,29 +51,29 @@ func DirTree(tree *Tree, ignore []string) (*Tree, error) {
 
 func TreeDiff(old *Tree, new *Tree) bool {
 	if old.Path != new.Path {
-		return false
+		return true
 	}
 	if old.IsDir != new.IsDir {
-		return false
+		return true
 	}
 	if old.Hash != new.Hash {
-		return false
+		return true
 	}
 	if len(old.Tree) != len(new.Tree) {
-		return false
+		return true
 	}
 
 	for k, _ := range old.Tree {
 		if _, ok := new.Tree[k]; !ok {
-			return false
+			return true
 		}
 		ok := TreeDiff(old.Tree[k], new.Tree[k])
-		if !ok {
-			return false
+		if ok {
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
 func WatcherDir(path string, d time.Duration, ignore []string) {
@@ -93,7 +90,7 @@ func WatcherDir(path string, d time.Duration, ignore []string) {
 		ignore,
 	)
 	if err != nil {
-		errors <- err
+		common.Errors <- err
 		return
 	}
 
@@ -107,13 +104,13 @@ func WatcherDir(path string, d time.Duration, ignore []string) {
 			ignore,
 		)
 		if err != nil {
-			errors <- err
+			common.Errors <- err
 			return
 		}
 
 		ok := TreeDiff(oldTree, newTree)
-		if !ok {
-			change <- ok
+		if ok {
+			common.Change <- ok
 		}
 
 		oldTree = newTree
